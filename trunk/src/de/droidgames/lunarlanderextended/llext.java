@@ -28,7 +28,6 @@ import android.widget.TextView;
 
 import de.droidgames.lunarlanderextended.llextView.LunarThread;
 
-
 /**
  * This is a simple LunarLander activity that houses a single LunarView. It
  * demonstrates...

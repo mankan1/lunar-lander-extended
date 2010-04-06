@@ -70,6 +70,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         public static final int PHYS_SLEW_SEC = 120; // degrees/second rotate
         public static final int PHYS_SPEED_INIT = 30;
         public static final int PHYS_SPEED_MAX = 180;
+        public static final int MAX_DIAMOND_MOVEMENT = 40;
         /*
          * State-tracking constants
          */
@@ -119,6 +120,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
          * @see #setSurfaceSize
          */
         private int mCanvasWidth = 1;
+        
         /**
          * Current difficulty -- amount of fuel, allowed angle, etc. Default is
          * MEDIUM.
@@ -141,7 +143,6 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         
         /** What to draw for Ground */
         private Drawable mGroundImage;
-        private int mGWidth;
         private int mGHeight;
         
         /** What to draw for a diamond */
@@ -188,8 +189,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         private boolean[] mDiamondsViz = new boolean[NUMBER_OF_DIAMONDS];
         
         /**Y of Diamond */
-        private double mYDiamond;
-        private double[] mYDiamonds = new double[NUMBER_OF_DIAMONDS];;
+        private double[] mYDiamonds = new double[NUMBER_OF_DIAMONDS];
+        private double[] mDiamondsSpeed = new double[NUMBER_OF_DIAMONDS];
         
         /** X of Blob */
         private double mXB;
@@ -233,7 +234,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mDHeight = mDiamondImage.getIntrinsicHeight();
             mCWidth = mCraterImage.getIntrinsicWidth();
             mCHeight = mCraterImage.getIntrinsicHeight();
-            mGWidth = mGroundImage.getIntrinsicWidth();
+        
             mGHeight = mGroundImage.getIntrinsicHeight();
             
             // Initialize paints for speedometer
@@ -273,10 +274,12 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                 mXDiamonds[0]= mCanvasWidth /3;
                 mYDiamonds[0] = mCanvasHeight-mBallHeight-Math.random()*40;
                 mDiamondsViz[0] = true;
+                mDiamondsSpeed[0] = Math.random()*40;
                 for (int i=1 ;i<NUMBER_OF_DIAMONDS;i++) {
                 	mXDiamonds[i] = mXDiamonds[i-1] + Math.random()*200;
                 	mYDiamonds[i] = mCanvasHeight-mBallHeight-Math.random()*40;
                 	mDiamondsViz[i] = true;
+                	mDiamondsSpeed[i] = Math.random()*40;
                 }
                 mXCrater[0] = mCanvasWidth / 2;
                 for (int i=1 ;i<NUMBER_OF_CRATERS;i++) {
@@ -284,7 +287,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                 }
                 
                 mXDiamond = mCanvasWidth/2;
-                mYDiamond = mCanvasHeight-mBallHeight;
+                //mYDiamond = mCanvasHeight-mBallHeight;
                 mLastTime = System.currentTimeMillis() + 100;
                 setState(STATE_RUNNING);
             }
@@ -649,6 +652,14 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mHeading = 360-(mHeading - Math.floor(mHeading))*360;
             mLastTime = now;
             
+            for (int i=0; i< NUMBER_OF_DIAMONDS;i++) {
+            	mYDiamonds[i] += elapsed * (mDiamondsSpeed[i]);
+            	if (mYDiamonds[i]>mCanvasHeight) {
+            		mDiamondsSpeed[i]*=-1;
+            	} else if (mYDiamonds[i]<0) {
+            		mDiamondsSpeed[i]*=-1;
+            	}
+            }
             // Evaluate if we have touched a Diamond ... Count
             // or if we have fallen into a crater       
             mScratchRect.set(mBallImage.getBounds());

@@ -565,12 +565,12 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                         // left/q -> left
                     } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT
                             || keyCode == KeyEvent.KEYCODE_Q) {
-                    	doAccelerate(-45);
+                    	doAccelerate(-5);
                         return true;
                         // right/w -> right
                     } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
                             || keyCode == KeyEvent.KEYCODE_W) {
-                        doAccelerate(45);
+                        doAccelerate(5);
                         return true;
                         // up -> pause
                     } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {

@@ -31,6 +31,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -529,6 +530,88 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         	mTiltAngle = -mTiltAngle2;        	
         }
         
+
+        /**
+         * Handles a key-down event.
+         * 
+         * @param keyCode the key that was pressed
+         * @param msg the original event object
+         * @return true
+         */
+        boolean doKeyDown(int keyCode, KeyEvent msg) {
+            synchronized (mSurfaceHolder) {
+                boolean okStart = false;
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP) okStart = true;
+                if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) okStart = true;
+                if (keyCode == KeyEvent.KEYCODE_S) okStart = true;
+
+                boolean center = (keyCode == KeyEvent.KEYCODE_DPAD_UP);
+
+                if (okStart
+                        && (mMode == STATE_READY || mMode == STATE_LOSE || mMode == STATE_WIN)) {
+                    // ready-to-start -> start
+                    doStart();
+                    return true;
+                } else if (mMode == STATE_PAUSE && okStart) {
+                    // paused -> running
+                    unpause();
+                    return true;
+                } else if (mMode == STATE_RUNNING) {
+                    // center/space -> fire
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                            || keyCode == KeyEvent.KEYCODE_SPACE) {
+                    	doJump();
+                        return true;
+                        // left/q -> left
+                    } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                            || keyCode == KeyEvent.KEYCODE_Q) {
+                    	doAccelerate(-45);
+                        return true;
+                        // right/w -> right
+                    } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+                            || keyCode == KeyEvent.KEYCODE_W) {
+                        doAccelerate(45);
+                        return true;
+                        // up -> pause
+                    } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                    	doJump();
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        /**
+         * Handles a key-up event.
+         * 
+         * @param keyCode the key that was pressed
+         * @param msg the original event object
+         * @return true if the key was handled and consumed, or else false
+         */
+        boolean doKeyUp(int keyCode, KeyEvent msg) {
+            boolean handled = false;
+
+            synchronized (mSurfaceHolder) {
+                if (mMode == STATE_RUNNING) {
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                            || keyCode == KeyEvent.KEYCODE_SPACE) {
+                        //setFiring(false);
+                        handled = true;
+                    } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                            || keyCode == KeyEvent.KEYCODE_Q
+                            || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+                            || keyCode == KeyEvent.KEYCODE_W) {
+                    	doAccelerate(0);
+                        handled = true;
+                    }
+                }
+            }
+
+            return handled;
+        }
+        
         /**
          * Draws the ball and diamonds to the provided Canvas.
          */
@@ -772,7 +855,17 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
 
-    /* Callback invoked when the surface dimensions change. */
+    @Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+    	return thread.doKeyDown(keyCode, event);
+	}
+
+	@Override
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		return thread.doKeyUp(keyCode, event);
+	}
+
+	/* Callback invoked when the surface dimensions change. */
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
             int height) {
         thread.setSurfaceSize(width, height);

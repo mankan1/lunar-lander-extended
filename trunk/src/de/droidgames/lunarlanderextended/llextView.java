@@ -621,7 +621,9 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawBitmap(mBackgroundImage, 0, 0, null);
             String txt = new String("Diamanten: "+Integer.toString(mDiamonds));
             canvas.drawText(txt, 5, 20, mLinePaint);
-
+            
+            String time = new String("Zeit: " + Long.toString(System.currentTimeMillis()));
+            canvas.drawText(time, 5, 40, mLinePaint);
             canvas.save();            
             mGroundImage.setBounds((int)(mXDiamond/3-100), (int)(mCanvasHeight-2*mGHeight),
             		(int)(mXDiamond/3+3*mCanvasWidth), (int)(mCanvasHeight));
@@ -735,6 +737,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mHeading = 360-(mHeading - Math.floor(mHeading))*360;
             mLastTime = now;
             
+            // Move Diamonds
             for (int i=0; i< NUMBER_OF_DIAMONDS;i++) {
             	mYDiamonds[i] += elapsed * (mDiamondsSpeed[i]);
             	if (mYDiamonds[i]>mCanvasHeight) {
@@ -744,7 +747,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             	}
             }
             // Evaluate if we have touched a Diamond ... Count
-            // or if we have fallen into a crater       
+            // or if we touch a Crater - Stop       
             mScratchRect.set(mBallImage.getBounds());
             CharSequence message = "";
             //Resources res = mContext.getResources();
@@ -758,14 +761,14 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             		}
             	}
             	
-            	/*
+            	
             	for (int i=0;i<NUMBER_OF_CRATERS;i++) {
-            		if (mScratchRect..contains((float)(mXDiamonds[i]+mXDiamond), (float)mYDiamonds[i]) && mDiamondsViz[i]==true) {
-            			mDiamonds++;            		
-            			mDiamondsViz[i]=false;
+            		if (mScratchRect.contains((float)(mXCrater[i]+mXDiamond-mCWidth/3), (float)mCanvasHeight-10)
+            				|| mScratchRect.contains((float)(mXCrater[i]+mXDiamond+mCWidth/3), (float)mCanvasHeight-10)) {
+            			mDX = 0;            		
             		}
             	}
-            	*/
+            	
             	message = "Test";
             	//setDiamondsText(message);
             } else {

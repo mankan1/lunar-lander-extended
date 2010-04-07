@@ -27,7 +27,7 @@
     
     <string name="mode_ready">LEVEL2\nHallo ERIK !</string>
 	<string name="mode_pause">Pause</string>
-	<string name="mode_lose">ENDE\nNochmal ?</string>
+	<string name="mode_lose">Keine Energie mehr\nNochmal ?</string>
 	<string name="mode_win_prefix">Super!\n</string> 
 	<string name="mode_win_suffix">Diamanten</string> 
 	

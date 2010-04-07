@@ -23,6 +23,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
@@ -58,6 +59,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         public static final int DIFFICULTY_MEDIUM = 2;
         public static final int NUMBER_OF_DIAMONDS = 20;
         public static final int NUMBER_OF_CRATERS = 8;
+        public static final float mTotalEnergy = 100;
         /*
          * Physics constants
          */
@@ -89,6 +91,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         public static final int TARGET_PAD_HEIGHT = 8; // how high above ground
         public static final int TARGET_SPEED = 28; // > this speed means crash
         public static final double TARGET_WIDTH = 1.6; // width of target
+        public static final int gaugeWidth = 200; // width of gauge Bar in pixels
         /*
          * UI constants (i.e. the speed & fuel bars)
          */
@@ -202,6 +205,9 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         /** Rotation Angle of Blob */
         private double mHeading=0;
         
+        /** Remaining Energy */
+        private int mRemEnergy = 100;
+        
         public LunarThread(SurfaceHolder surfaceHolder, Context context,
                 Handler handler) {
             // get handles to some important objects
@@ -271,6 +277,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                 mYB = mCanvasHeight-mBallHeight/4;
                 mDX = 0;
                 mDY = 0;
+                mRemEnergy = 100;
                 
                 mXDiamonds[0]= mCanvasWidth /3;
                 mYDiamonds[0] = mCanvasHeight-mBallHeight-Math.random()*40;
@@ -619,6 +626,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             // Draw the background image. Operations on the Canvas accumulate
             // so this is like clearing the screen.
             canvas.drawBitmap(mBackgroundImage, 0, 0, null);
+            
             String txt = new String("Diamanten: "+Integer.toString(mDiamonds));
             canvas.drawText(txt, 5, 20, mLinePaint);
             
@@ -659,6 +667,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             		}
             	}
             }
+            drawEnergy(canvas);
             //canvas.restore();
             //canvas.save();
             canvas.rotate((float)mHeading, (float)(mXB), (float)(mYB-mBallHeight/4));
@@ -666,9 +675,38 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mBallImage.setBounds((int)mXB-mBallWidth/4,(int)mYB-mBallHeight/2,
             		(int)mXB+mBallWidth/4, (int)mYB);
             mBallImage.draw(canvas);
+            
             canvas.restore();            	
         }
-
+        
+        /**
+         * Draws the energy Bar
+         */
+        private void drawEnergy(Canvas canvas) {
+        	// See what fraction of energy we're having.
+            float fuelFrac = (float) mRemEnergy / (float)mTotalEnergy;
+            
+            // Work out what colour to draw the fuel bar in.
+            float [] scratchHsv = new float[3];
+            scratchHsv[0] = fuelFrac * 120f;
+            scratchHsv[1] = 1f;
+            scratchHsv[2] = 1f;
+            int fuelCol = Color.HSVToColor(scratchHsv);
+            
+            // Draw the fuel bar.
+            mLinePaint.setStyle(Paint.Style.FILL);
+            mLinePaint.setColor(fuelCol);
+            float w = (float) gaugeWidth * fuelFrac;
+            canvas.drawRect(mCanvasWidth-150, 30, mCanvasWidth-150 + w, 50, mLinePaint);
+            
+            // Draw the outline.
+            mLinePaint.setStyle(Paint.Style.STROKE);
+            mLinePaint.setStrokeWidth(1.0f);
+            mLinePaint.setColor(0xffffff00);
+            canvas.drawRect(mCanvasWidth-150, 30, mCanvasWidth-150 + w, 50, mLinePaint);  
+        
+        }
+        
         /**
          * Figures the lander state (x, y, fuel, ...) based on the passage of
          * realtime. Does not invalidate(). Called at the start of draw().
@@ -761,15 +799,25 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             		}
             	}
             	
-            	
+            	// touch Crater
             	for (int i=0;i<NUMBER_OF_CRATERS;i++) {
             		if (mScratchRect.contains((float)(mXCrater[i]+mXDiamond-mCWidth/3), (float)mCanvasHeight-10)
             				|| mScratchRect.contains((float)(mXCrater[i]+mXDiamond+mCWidth/3), (float)mCanvasHeight-10)) {
             			mDX = 0;            		
             		}
+            		           	
+            		// zaehlt nur runter, wenn man genau in der Mitte des Kraters ist.
+            		// Muss ich noch aendern
+            		if (mScratchRect.contains((float)(mXCrater[i]+mXDiamond), (float)mCanvasHeight-10)) {
+            			mRemEnergy--;
+            			if (mRemEnergy <=0) {
+            				mRemEnergy = 0;
+            				result = STATE_LOSE;
+            			}
+            		}
             	}
             	
-            	message = "Test";
+            	message = "Schade !!!!";
             	//setDiamondsText(message);
             } else {
             	result = STATE_WIN;

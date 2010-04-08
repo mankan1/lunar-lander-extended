@@ -64,7 +64,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
          * Physics constants
          */
         public static final int PHYS_DOWN_ACCEL_SEC = 300;
-        public static final int PHYS_ACCEL_FACTOR_X = 2;
+        public static final int PHYS_ACCEL_FACTOR_X = 1;
         public static final int INITIAL_JUMP_SPEED = -250;
         public static final int PHYS_FIRE_ACCEL_SEC = 80;
         public static final int PHYS_FUEL_INIT = 60;
@@ -288,7 +288,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                 	mXDiamonds[i] = mXDiamonds[i-1] + Math.random()*200;
                 	mYDiamonds[i] = mCanvasHeight-mBallHeight-Math.random()*40;
                 	mDiamondsViz[i] = true;
-                	mDiamondsSpeed[i] = Math.random()*40;
+                	mDiamondsSpeed[i] = Math.random()*40+2;
                 }
                 mXCrater[0] = mCanvasWidth / 2;
                 for (int i=1 ;i<NUMBER_OF_CRATERS;i++) {
@@ -779,9 +779,9 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             // Move Diamonds
             for (int i=0; i< NUMBER_OF_DIAMONDS;i++) {
             	mYDiamonds[i] += elapsed * (mDiamondsSpeed[i]);
-            	if (mYDiamonds[i]>mCanvasHeight) {
+            	if (mYDiamonds[i]>mCanvasHeight-10) {
             		mDiamondsSpeed[i]*=-1;
-            	} else if (mYDiamonds[i]<0) {
+            	} else if (mYDiamonds[i] < 10) {
             		mDiamondsSpeed[i]*=-1;
             	}
             }

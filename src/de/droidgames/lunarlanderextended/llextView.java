@@ -91,7 +91,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         public static final int TARGET_PAD_HEIGHT = 8; // how high above ground
         public static final int TARGET_SPEED = 28; // > this speed means crash
         public static final double TARGET_WIDTH = 1.6; // width of target
-        public static final int gaugeWidth = 200; // width of gauge Bar in pixels
+        public static final int gaugeWidth = 150; // width of gauge Bar in pixels
         /*
          * UI constants (i.e. the speed & fuel bars)
          */
@@ -216,10 +216,11 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mContext = context;
             
             mLinePaint = new Paint();
-            mLinePaint.setAntiAlias(true);
-            mLinePaint.setARGB(255, 100, 255, 10);
+            //mLinePaint.setAntiAlias(true);
             mLinePaint.setStyle(Paint.Style.STROKE);
-            mLinePaint.setStrokeWidth(5);
+            //mLinePaint.setStrokeWidth(5);
+            mLinePaint.setStrokeWidth(1.0f);
+            mLinePaint.setColor(0xffffff00);
             
             Resources res = context.getResources();
             // cache handles to our key sprites & other drawables
@@ -697,13 +698,13 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mLinePaint.setStyle(Paint.Style.FILL);
             mLinePaint.setColor(fuelCol);
             float w = (float) gaugeWidth * fuelFrac;
-            canvas.drawRect(mCanvasWidth-150, 30, mCanvasWidth-150 + w, 50, mLinePaint);
+            canvas.drawRect(mCanvasWidth-150, 5, mCanvasWidth-150 + w, 25, mLinePaint);
             
             // Draw the outline.
             mLinePaint.setStyle(Paint.Style.STROKE);
             mLinePaint.setStrokeWidth(1.0f);
             mLinePaint.setColor(0xffffff00);
-            canvas.drawRect(mCanvasWidth-150, 30, mCanvasWidth-150 + w, 50, mLinePaint);  
+            canvas.drawRect(mCanvasWidth-150, 5, mCanvasWidth-150 + w, 25, mLinePaint);  
         
         }
         
@@ -806,9 +807,10 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             			mDX = 0;            		
             		}
             		           	
-            		// zaehlt nur runter, wenn man genau in der Mitte des Kraters ist.
-            		// Muss ich noch aendern
-            		if (mScratchRect.contains((float)(mXCrater[i]+mXDiamond), (float)mCanvasHeight-10)) {
+            		// zaehlt nur runter, wenn man in der Mitte des Kraters ist.
+            		if (mScratchRect.left > (float)(mXCrater[i]+mXDiamond)-mCWidth/3 && 
+            				mScratchRect.right < (float)(mXCrater[i]+mXDiamond+mCWidth/3)
+            				&& mScratchRect.bottom > mCanvasHeight-mCHeight) {
             			mRemEnergy--;
             			if (mRemEnergy <=0) {
             				mRemEnergy = 0;

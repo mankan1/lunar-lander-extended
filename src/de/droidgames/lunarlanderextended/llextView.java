@@ -18,6 +18,8 @@
 
 package de.droidgames.lunarlanderextended;
 
+import java.io.IOException;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -28,6 +30,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -208,8 +211,15 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         /** Remaining Energy */
         private int mRemEnergy = 100;
         
+        /** Media Player **/
+        private MediaPlayer mp;
+
+        
         public LunarThread(SurfaceHolder surfaceHolder, Context context,
                 Handler handler) {
+        	// Initialize Media Player
+        	mp = MediaPlayer.create(context, R.raw.bling);
+        	
             // get handles to some important objects
             mSurfaceHolder = surfaceHolder;
             mHandler = handler;
@@ -309,6 +319,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             synchronized (mSurfaceHolder) {
                 if (mMode == STATE_RUNNING) setState(STATE_PAUSE);
             }
+            mp.stop();
         }
 
         /**
@@ -496,6 +507,15 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                 mLastTime = System.currentTimeMillis() + 100;
             }
             setState(STATE_RUNNING);
+            try {
+				mp.prepare();
+			} catch (IllegalStateException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
        
         boolean doTouchEvent(MotionEvent event) {
@@ -552,6 +572,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                 if (keyCode == KeyEvent.KEYCODE_DPAD_UP) okStart = true;
                 if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) okStart = true;
                 if (keyCode == KeyEvent.KEYCODE_S) okStart = true;
+                if (keyCode == KeyEvent.KEYCODE_SPACE) okStart = true;
 
                 boolean center = (keyCode == KeyEvent.KEYCODE_DPAD_UP);
 
@@ -797,6 +818,10 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             		if (mScratchRect.contains((float)(mXDiamonds[i]+mXDiamond), (float)mYDiamonds[i]) && mDiamondsViz[i]==true) {
             			mDiamonds++;            		
             			mDiamondsViz[i]=false;
+            			
+            			// play sound
+            			mp.seekTo(0);            			
+            			mp.start();
             		}
             	}
             	

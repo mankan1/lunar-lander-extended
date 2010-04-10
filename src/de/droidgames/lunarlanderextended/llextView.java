@@ -18,8 +18,6 @@
 
 package de.droidgames.lunarlanderextended;
 
-import java.io.IOException;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -30,7 +28,6 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.hardware.SensorManager;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -215,15 +212,15 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         
         /** Remaining Energy */
         private int mRemEnergy = 100;
-        
-        /** Media Player **/
-        private MediaPlayer mp;
+
+        /** Sound **/
+        private Sound mSound;
 
         
         public LunarThread(SurfaceHolder surfaceHolder, Context context,
                 Handler handler) {
-        	// Initialize Media Player
-        	mp = MediaPlayer.create(context, R.raw.bling);
+        	// Initialize Sound
+        	mSound = new Sound(context);
         	
             // get handles to some important objects
             mSurfaceHolder = surfaceHolder;
@@ -326,7 +323,6 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             synchronized (mSurfaceHolder) {
                 if (mMode == STATE_RUNNING) setState(STATE_PAUSE);
             }
-            mp.stop();
         }
 
         /**
@@ -514,15 +510,6 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                 mLastTime = System.currentTimeMillis() + 100;
             }
             setState(STATE_RUNNING);
-            try {
-				mp.prepare();
-			} catch (IllegalStateException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
         }
        
         boolean doTouchEvent(MotionEvent event) {
@@ -830,8 +817,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             			mDiamondsViz[i]=false;
             			
             			// play sound
-            			mp.seekTo(0);            			
-            			mp.start();
+            			mSound.play(mSound.SOUND_BLING, 0.5f, 0.5f, 1, 0, 1.0f);
             		}
             	}
             	

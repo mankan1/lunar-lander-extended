@@ -67,8 +67,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
          * Physics constants
          */
         public static final int PHYS_DOWN_ACCEL_SEC = 300;
-        public static final int PHYS_ACCEL_FACTOR_X = 1;
-        public static final int INITIAL_JUMP_SPEED = -250;
+        public static final int PHYS_ACCEL_FACTOR_X = 3;
+        public static final int INITIAL_JUMP_SPEED = -275;
         public static final int PHYS_FIRE_ACCEL_SEC = 80;
         public static final int PHYS_FUEL_INIT = 60;
         public static final int PHYS_FUEL_MAX = 100;
@@ -157,6 +157,11 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         private int mDWidth;
         private int mDHeight;
         
+        /** What to draw for the lander */
+        private Drawable mLanderImage;
+        private int mLWidth;
+        private int mLHeight;
+        
         /** What to draw for a crater */
         private Drawable mCraterImage;
         private int mCWidth;
@@ -240,7 +245,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mDiamondImage = context.getResources().getDrawable(R.drawable.diamond2);
             mCraterImage = context.getResources().getDrawable(R.drawable.krater);
             mMidImage = context.getResources().getDrawable(R.drawable.mid);
-            
+            mLanderImage = context.getResources().getDrawable(R.drawable.lander_plain);
             // load background image as a Bitmap instead of a Drawable b/c
             // we don't need to transform it and it's faster to draw this way
             mBackgroundImage = BitmapFactory.decodeResource(res,R.drawable.earthrise);
@@ -252,6 +257,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mDHeight = mDiamondImage.getIntrinsicHeight();
             mCWidth = mCraterImage.getIntrinsicWidth();
             mCHeight = mCraterImage.getIntrinsicHeight();
+            mLWidth = mLanderImage.getIntrinsicWidth();
+            mLHeight = mLanderImage.getIntrinsicHeight();
         
             mGHeight = mGroundImage.getIntrinsicHeight();
             
@@ -647,8 +654,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         private void doDraw(Canvas canvas) {
             // Draw the background image. Operations on the Canvas accumulate
             // so this is like clearing the screen.
-            canvas.drawBitmap(mBackgroundImage, 0, 0, null);
-            
+            canvas.drawBitmap(mBackgroundImage, 0, 0, null); 
             String txt = new String("Diamanten: "+Integer.toString(mDiamonds));
             canvas.drawText(txt, 5, 20, mLinePaint);
             
@@ -658,7 +664,11 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mGroundImage.setBounds((int)(mXDiamond/3-100), (int)(mCanvasHeight-2*mGHeight),
             		(int)(mXDiamond/3+3*mCanvasWidth), (int)(mCanvasHeight));
             mGroundImage.draw(canvas);
-
+            
+            if (mXDiamond+mLWidth+10 > 0) {
+            	mLanderImage.setBounds((int)(10+mXDiamond-mLWidth),mCanvasHeight-mLHeight, (int)(10+mXDiamond), mCanvasHeight);
+            	mLanderImage.draw(canvas);	
+            }
             for (int i=0;i<NUMBER_OF_CRATERS;i++) {
             	int left = (int)(mXCrater[i]+mXDiamond-mCWidth/3);
         		int right =(int)(mXCrater[i]+mXDiamond+mCWidth/3);
@@ -745,7 +755,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             double elapsed = (now - mLastTime) / 1000.0;
 
             // Base accelerations -- 0 for x, gravity for y
-            double ddx = PHYS_DOWN_ACCEL_SEC * PHYS_ACCEL_FACTOR_X * elapsed * Math.sin(Math.PI*mTiltAngle/180) * PHYS_ACCEL_FACTOR_X;
+            double ddx = PHYS_DOWN_ACCEL_SEC * PHYS_ACCEL_FACTOR_X * elapsed * Math.sin(Math.PI*mTiltAngle/180) * PHYS_ACCEL_FACTOR_X/2;
             double ddy = PHYS_DOWN_ACCEL_SEC * (SensorManager.GRAVITY_MOON / 1.6) * elapsed;
 
           
@@ -829,13 +839,14 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             	for (int i=0;i<NUMBER_OF_CRATERS;i++) {
             		if (mScratchRect.contains((float)(mXCrater[i]+mXDiamond-mCWidth/3), (float)mCanvasHeight-10)
             				|| mScratchRect.contains((float)(mXCrater[i]+mXDiamond+mCWidth/3), (float)mCanvasHeight-10)) {
-            			mDX = 0;            		
+            			mDX*=0.5;
+            			mDY=-150;
             		}
             		           	
             		// zaehlt nur runter, wenn man in der Mitte des Kraters ist.
             		if (mScratchRect.left > (float)(mXCrater[i]+mXDiamond)-mCWidth/3 && 
             				mScratchRect.right < (float)(mXCrater[i]+mXDiamond+mCWidth/3)
-            				&& mScratchRect.bottom > mCanvasHeight-mCHeight) {
+            				&& mScratchRect.bottom > mCanvasHeight-mCHeight/2) {
             			mRemEnergy--;
             			if (mRemEnergy <=0) {
             				mRemEnergy = 0;

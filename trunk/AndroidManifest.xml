@@ -20,7 +20,7 @@
      own application, the package name must be changed from "com.example.*"
      to come from a domain that you own or have control over. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="de.droidgames.lunarlanderextended">
+    package="de.droidgames.lunarlanderextended" android:versionName="Gierige Giraffe" android:versionCode="1">
     <application android:icon="@drawable/ball" android:label="@string/app_name">
         <activity android:name="llext" android:screenOrientation="landscape">
             <intent-filter>

@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MenuInflater;
 import android.view.Window;
 import android.widget.TextView;
 
@@ -64,17 +65,9 @@ public class llext extends Activity implements SensorListener {
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-
-        menu.add(0, MENU_START, 0, R.string.menu_start);
-        menu.add(0, MENU_STOP, 0, R.string.menu_stop);
-        menu.add(0, MENU_PAUSE, 0, R.string.menu_pause);
-        menu.add(0, MENU_RESUME, 0, R.string.menu_resume);
-        menu.add(0, MENU_EASY, 0, R.string.menu_easy);
-        menu.add(0, MENU_MEDIUM, 0, R.string.menu_medium);
-        menu.add(0, MENU_HARD, 0, R.string.menu_hard);
-
-        return true;
+    	MenuInflater inflater = getMenuInflater();
+    	inflater.inflate(R.menu.menu, menu);
+    	return true;
     }
 
     /**
@@ -87,7 +80,7 @@ public class llext extends Activity implements SensorListener {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case MENU_START:
+            case R.id.newgame:
                 mLunarThread.doStart();
                 return true;
             case MENU_STOP:
@@ -111,7 +104,7 @@ public class llext extends Activity implements SensorListener {
                 return true;
         }
 
-        return false;
+        return true;
     }
 
     /**

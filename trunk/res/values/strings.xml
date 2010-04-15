@@ -39,4 +39,11 @@
     <string name="lunar_layout_text_text"></string>
     <string name="lunar_layout_diamonds_text">Diamanten:</string>
     
+<string name="Prefs_title">Settings</string>
+<string name="menu_new">New Game</string>
+<string name="menu_prefs">Settings</string>
+<string name="menu_help">Help</string>
+
+<string name="menu_about">About</string>
+
 </resources>

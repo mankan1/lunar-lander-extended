@@ -953,8 +953,20 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder holder) {
         // start the thread here so that we don't busy-wait in run()
         // waiting for the surface to be created
-        thread.setRunning(true);
-        thread.start();
+        
+    	// If Preferences are displayed the original Surface Destroyed is called.
+    	// if so, i start a new one see issue 972 on code.google.com
+        if (thread.getState() == Thread.State.TERMINATED) {
+			thread = new LunarThread(getHolder(), getContext(), getHandler());
+			thread.setRunning(true);
+			thread.start();
+		}
+		else {
+			thread.setRunning(true);
+			thread.start();
+		}  
+        
+        //Test Ende 
     }
 
     /*

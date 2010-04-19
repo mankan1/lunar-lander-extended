@@ -16,17 +16,17 @@
 package de.droidgames.lunarlanderextended;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.hardware.SensorListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.Window;
 import android.widget.TextView;
-
 import de.droidgames.lunarlanderextended.llextView.LunarThread;
 
 /**
@@ -97,8 +97,13 @@ public class llext extends Activity implements SensorListener {
                 return true;
             case R.id.preferences:
             	//mLunarThread.pause();
-                mLunarThread.setDifficulty(LunarThread.DIFFICULTY_HARD);
-                return true;
+            	// Launch the preferences activity as a subactivity, so we
+                // know when it returns.
+                Intent pIntent = new Intent();
+                pIntent.setClass(getBaseContext(), Preferences.class);               
+                startActivity(pIntent);
+                mLunarThread.resume();
+                break;
         }
 
         return true;

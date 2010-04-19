@@ -2,6 +2,7 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
 <EditTextPreference android:key="username" android:title="User Name" android:summary="Please enter your User"></EditTextPreference>
-<ListPreference android:summary="Choose an planet" android:title="@string/planet" android:key="planet" android:entries="@array/prefs_skill_entries" android:entryValues="@array/prefs_skill_entries"></ListPreference>
+<ListPreference android:title="@string/planet" android:key="planet" android:entries="@array/prefs_skill_entries" android:entryValues="@array/prefs_skill_entries" android:summary="Choose your planet"></ListPreference>
 <CheckBoxPreference android:key="sound" android:summary="Sounds on/off" android:title="Sound"></CheckBoxPreference>
+<ListPreference android:summary="Difficulty" android:entries="@array/difficulties" android:title="Difficulty" android:entryValues="@array/difficulties" android:key="Difficulty"></ListPreference>
 </PreferenceScreen>

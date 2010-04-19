@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!-- Entry names for the planets drop down list. -->
+    <string-array name="prefs_skill_entries">
+        <item>Merkur</item>
+        <item>Venus</item>
+        <item>Erde</item>
+        <item>Mars</item>
+        <item>Jupiter</item>
+        <item>Saturn</item>
+        <item>Uranus</item>
+        <item>Neptun</item>
+        <item>Pluto</item>  
+    </string-array>
+</resources>

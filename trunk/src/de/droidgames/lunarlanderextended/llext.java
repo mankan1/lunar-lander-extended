@@ -101,11 +101,9 @@ public class llext extends Activity implements SensorListener {
                 // know when it returns.
                 Intent pIntent = new Intent();
                 pIntent.setClass(getBaseContext(), Preferences.class);               
-                startActivity(pIntent);
-                mLunarThread.resume();
+                startActivity(pIntent);             
                 break;
         }
-
         return true;
     }
 

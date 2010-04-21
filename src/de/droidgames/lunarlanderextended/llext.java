@@ -17,9 +17,6 @@ package de.droidgames.lunarlanderextended;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Configuration;
-import android.hardware.SensorListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -38,10 +35,7 @@ import de.droidgames.lunarlanderextended.llextView.LunarThread;
  * <li>handling onPause() in an animation
  * </ul>
  */
-public class llext extends Activity implements SensorListener {
-	
-	SensorManager sm = null;
-    private int deviceOrientation;
+public class llext extends Activity {	
 	
     private static final int MENU_PAUSE = 4;
     private static final int MENU_RESUME = 5;
@@ -119,7 +113,6 @@ public class llext extends Activity implements SensorListener {
 
         // turn off the window's title bar
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        sm = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         // tell system to use the layout defined in our XML file
         setContentView(R.layout.lunar_layout);
@@ -141,10 +134,6 @@ public class llext extends Activity implements SensorListener {
             mLunarThread.restoreState(savedInstanceState);
             Log.w(this.getClass().getName(), "SIS is nonnull");
         }
-        sm.registerListener(this, 
-                SensorManager.SENSOR_ORIENTATION |
-        		SensorManager.SENSOR_ACCELEROMETER,
-                SensorManager.SENSOR_DELAY_NORMAL);
     }
    
     /**
@@ -168,38 +157,6 @@ public class llext extends Activity implements SensorListener {
         super.onSaveInstanceState(outState);
         mLunarThread.saveState(outState);
         Log.w(this.getClass().getName(), "SIS called");
-    }
-    
-    public void onSensorChanged(int sensor, float[] values) {
-        synchronized (this) {
-            Log.d("LOG", "onSensorChanged: " + sensor + ", x: " + values[0] + ", y: " + values[1] + ", z: " + values[2]);
-            if (sensor != SensorManager.SENSOR_ACCELEROMETER || values.length < 3)
-                return;                    
-                       
-            float x, y, z;
-            if (deviceOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-            	x = -values[1];
-            	y = values[0];
-            	z = values[2];
-            } else {
-            	x = values[0];
-            	y = values[1];
-            	z = values[2];
-            }
-            float m = (float) Math.sqrt(x*x + y*y + z*z);
-            float tilt = m == 0 ? 0  : (float) Math.toDegrees(Math.asin(x / m));
-            Log.v("LOG", "tilt: " + x + "," + y + "," + z + " -> " + tilt);
-
-            // Amplify the user's movements.
-            tilt *= 1;        
-            float mTiltAngle = tilt < 0 ? tilt + 360 : tilt;           	
-            mLunarThread.doAccelerate(mTiltAngle);          
-        }
-    }
-    
-    public void onAccuracyChanged(int sensor, int accuracy) {
-    	Log.d("LOG","onAccuracyChanged: " + sensor + ", accuracy: " + accuracy);
-        
     }
 }
 

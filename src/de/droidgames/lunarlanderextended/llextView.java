@@ -19,6 +19,7 @@
 package de.droidgames.lunarlanderextended;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -34,6 +35,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -234,12 +236,11 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mHandler = handler;
             mContext = context;
             
-            mLinePaint = new Paint();
-            //mLinePaint.setAntiAlias(true);
-            mLinePaint.setStyle(Paint.Style.STROKE);
-            //mLinePaint.setStrokeWidth(5);
-            mLinePaint.setStrokeWidth(1.0f);
-            mLinePaint.setColor(0xffffff00);
+         // Initialize paints for speedometer
+            mLinePaint = new Paint();         
+            mLinePaint.setTextSize(20);
+            mLinePaint.setAntiAlias(true);
+            mLinePaint.setARGB(255, 0, 255, 0);
             
             Resources res = context.getResources();
             // cache handles to our key sprites & other drawables
@@ -264,13 +265,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mLWidth = mLanderImage.getIntrinsicWidth();
             mLHeight = mLanderImage.getIntrinsicHeight();
         
-            mGHeight = mGroundImage.getIntrinsicHeight();
-            
-            // Initialize paints for speedometer
-            mLinePaint = new Paint();
-            mLinePaint.setTextSize(20);
-            mLinePaint.setAntiAlias(true);
-            mLinePaint.setARGB(255, 0, 255, 0);
+            mGHeight = mGroundImage.getIntrinsicHeight();            
           
             mScratchRect = new RectF(0, 0, 0, 0);
 
@@ -289,6 +284,17 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                     SensorManager.SENSOR_ORIENTATION |
             		SensorManager.SENSOR_ACCELEROMETER,
                     SensorManager.SENSOR_DELAY_NORMAL);
+            
+           /*
+            *  SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            
+            try {
+                String sval = prefs.getString("skillLevel", skillLevel.toString());
+                skillLevel = GameView.Difficulty.valueOf(sval);
+            } catch (Exception e) {
+            }
+            mLunarView.setDifficulty(skillLevel);
+            */
             
         }
 
@@ -699,8 +705,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             	}
             }
             drawEnergy(canvas);
-            //canvas.restore();
-            //canvas.save();
+            
             canvas.rotate((float)mHeading, (float)(mXB), (float)(mYB-mBallHeight/4));
             // Draw Blob on his location      
             mBallImage.setBounds((int)mXB-mBallWidth/4,(int)mYB-mBallHeight/2,
@@ -725,17 +730,10 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             int fuelCol = Color.HSVToColor(scratchHsv);
             
             // Draw the fuel bar.
-            mLinePaint.setStyle(Paint.Style.FILL);
             mLinePaint.setColor(fuelCol);
             float w = (float) gaugeWidth * fuelFrac;
-            canvas.drawRect(mCanvasWidth-150, 5, mCanvasWidth-150 + w, 25, mLinePaint);
-            
-            // Draw the outline.
-            mLinePaint.setStyle(Paint.Style.STROKE);
-            mLinePaint.setStrokeWidth(1.0f);
-            mLinePaint.setColor(0xffffff00);
             canvas.drawRect(mCanvasWidth-150, 5, mCanvasWidth-150 + w, 25, mLinePaint);  
-        
+            mLinePaint.setARGB(255, 0, 255, 0);
         }
         
         /**

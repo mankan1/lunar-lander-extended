@@ -31,6 +31,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -216,6 +217,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         /** Sound **/
         private Sound mSound;
 
+        Vibrator Vibrator;
         
         public LunarThread(SurfaceHolder surfaceHolder, Context context,
                 Handler handler) {
@@ -275,6 +277,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mYB = 1;
             mDX = 0;
             mDY = 0;
+            
+            Vibrator = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
         }
 
         public int getMode() {
@@ -286,14 +290,11 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
          */
         public void doStart() {
             synchronized (mSurfaceHolder) {
-            	                
-            	// pick a convenient initial location for the lander sprite
                 mXB = mCanvasWidth / 4;
                 mYB = mCanvasHeight-mBallHeight/4;
                 mDX = 0;
                 mDY = 0;
-                mRemEnergy = 100;
-                
+                mRemEnergy = 100;                
                 mXDiamonds[0]= mCanvasWidth /3;
                 mYDiamonds[0] = mCanvasHeight-mBallHeight-Math.random()*40;
                 mDiamondsViz[0] = true;
@@ -310,7 +311,6 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                 }
                 
                 mXDiamond = mCanvasWidth/2;
-                //mYDiamond = mCanvasHeight-mBallHeight;
                 mLastTime = System.currentTimeMillis() + 100;
                 setState(STATE_RUNNING);
             }
@@ -834,6 +834,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             				mScratchRect.right < (float)(mXCrater[i]+mXDiamond+mCWidth/3)
             				&& mScratchRect.bottom > mCanvasHeight-mCHeight/2) {
             			mRemEnergy--;
+            			Vibrator.vibrate(100);
             			if (mRemEnergy <=0) {
             				mRemEnergy = 0;
             				result = STATE_LOSE;

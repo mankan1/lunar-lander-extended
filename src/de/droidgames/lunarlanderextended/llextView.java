@@ -19,6 +19,7 @@
 package de.droidgames.lunarlanderextended;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -27,12 +28,14 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.hardware.SensorListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -51,7 +54,7 @@ import android.widget.TextView;
  * by the system.
  */
 class llextView extends SurfaceView implements SurfaceHolder.Callback {
-    class LunarThread extends Thread {
+    class LunarThread extends Thread implements SensorListener {
         /*
          * Difficulty setting constants
          */
@@ -218,6 +221,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
         private Sound mSound;
 
         Vibrator Vibrator;
+        SensorManager sm = null;
+        private int deviceOrientation;
         
         public LunarThread(SurfaceHolder surfaceHolder, Context context,
                 Handler handler) {
@@ -279,6 +284,12 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             mDY = 0;
             
             Vibrator = (Vibrator) context.getSystemService(context.VIBRATOR_SERVICE);
+            sm = (SensorManager) context.getSystemService(context.SENSOR_SERVICE);
+            sm.registerListener(this, 
+                    SensorManager.SENSOR_ORIENTATION |
+            		SensorManager.SENSOR_ACCELEROMETER,
+                    SensorManager.SENSOR_DELAY_NORMAL);
+            
         }
 
         public int getMode() {
@@ -388,6 +399,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
                     map.putInt(KEY_BALL_WIDTH, Integer.valueOf(mBallWidth));
                     map.putInt(KEY_BALL_HEIGHT, Integer.valueOf(mBallHeight));
                     map.putInt(KEY_DIAMONDS, Integer.valueOf(mDiamonds));
+                    
                 }
             }
             return map;
@@ -849,6 +861,37 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
             }
             setState(result, message);
 
+        }
+        public void onSensorChanged(int sensor, float[] values) {
+            synchronized (this) {
+                Log.d("LOG", "onSensorChanged: " + sensor + ", x: " + values[0] + ", y: " + values[1] + ", z: " + values[2]);
+                if (sensor != SensorManager.SENSOR_ACCELEROMETER || values.length < 3)
+                    return;                    
+                           
+                float x, y, z;
+                if (deviceOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+                	x = -values[1];
+                	y = values[0];
+                	z = values[2];
+                } else {
+                	x = values[0];
+                	y = values[1];
+                	z = values[2];
+                }
+                float m = (float) Math.sqrt(x*x + y*y + z*z);
+                float tilt = m == 0 ? 0  : (float) Math.toDegrees(Math.asin(x / m));
+                Log.v("LOG", "tilt: " + x + "," + y + "," + z + " -> " + tilt);
+
+                // Amplify the user's movements.
+                tilt *= 1;        
+                float mTiltAngle = tilt < 0 ? tilt + 360 : tilt;           	
+                doAccelerate(mTiltAngle);          
+            }
+        }
+        
+        public void onAccuracyChanged(int sensor, int accuracy) {
+        	Log.d("LOG","onAccuracyChanged: " + sensor + ", accuracy: " + accuracy);
+            
         }
     }
 

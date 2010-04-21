@@ -52,6 +52,7 @@ public class llext extends Activity implements SensorListener {
 
     /** A handle to the View in which the game is running. */
     private llextView mLunarView;
+    
 
     /**
      * Invoked during init to give the Activity a chance to set up its Menu.
@@ -95,10 +96,9 @@ public class llext extends Activity implements SensorListener {
             case R.id.help:
                 mLunarThread.setDifficulty(LunarThread.DIFFICULTY_MEDIUM);
                 return true;
+            case R.id.quit:
+                return true;
             case R.id.preferences:
-            	//mLunarThread.pause();
-            	// Launch the preferences activity as a subactivity, so we
-                // know when it returns.
                 Intent pIntent = new Intent();
                 pIntent.setClass(getBaseContext(), Preferences.class);               
                 startActivity(pIntent);             
@@ -146,7 +146,7 @@ public class llext extends Activity implements SensorListener {
         		SensorManager.SENSOR_ACCELEROMETER,
                 SensorManager.SENSOR_DELAY_NORMAL);
     }
-
+   
     /**
      * Invoked when the Activity loses user focus.
      */

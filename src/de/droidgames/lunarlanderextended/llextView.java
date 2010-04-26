@@ -541,7 +541,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 			// If we're stopped, touch screen to start.
 			if (mMode != STATE_RUNNING) {
 				if (action == MotionEvent.ACTION_DOWN) {
-					if (mMode == 0)
+					if (mMode == STATE_PAUSE)
 						unpause();                    	
 					else
 						doStart();

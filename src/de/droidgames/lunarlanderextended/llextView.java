@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.util.FloatMath;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -55,6 +56,8 @@ import android.widget.TextView;
  */
 class llextView extends SurfaceView implements SurfaceHolder.Callback {
 	class LunarThread extends Thread implements SensorListener {
+		public static final float PI = 3.14159265358979f;
+		
 		/*
 		 * Difficulty setting constants
 		 */
@@ -63,7 +66,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 		public static final int DIFFICULTY_MEDIUM = 2;
 		public static final int NUMBER_OF_DIAMONDS = 20;
 		public static final int NUMBER_OF_CRATERS = 8;
-		public static final float mTotalEnergy = 100;
+		public static final float mTotalEnergy = 100.0f;
 		/*
 		 * Physics constants
 		 */
@@ -90,15 +93,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 		public static final int LEVEL1 = 1;
 		public static final int LEVEL2 = 2;
 
-		/*
-		 * Goal condition constants
-		 */
-		public static final int TARGET_ANGLE = 18; // > this angle means crash
-		public static final int TARGET_BOTTOM_PADDING = 17; // px below gear
-		public static final int TARGET_PAD_HEIGHT = 8; // how high above ground
-		public static final int TARGET_SPEED = 28; // > this speed means crash
-		public static final double TARGET_WIDTH = 1.6; // width of target
 		public static final int gaugeWidth = 150; // width of gauge Bar in pixels
+
 		/*
 		 * UI constants (i.e. the speed & fuel bars)
 		 */
@@ -138,11 +134,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 		 */
 		private int mDifficulty;
 
-		/** Velocity dx. */
-		private double mDX;
-
-		/** Velocity dy. */
-		private double mDY;
+		/** Velocity dx/dy. */
+		private Vector2 mD;
 
 		/** Message handler used by thread to interact with TextView */
 		private Handler mHandler;
@@ -192,30 +185,27 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 
 		/** Is the ball jumping? */
 		private boolean mJumping;
-		private double mTiltAngle = 0;
+		private float mTiltAngle = 0.0f;
 
-		private double[] mXCrater = new double[NUMBER_OF_CRATERS];
+		private float[] mXCrater = new float[NUMBER_OF_CRATERS];
 
 		/** Number of Diamond collected */
 		private int mDiamonds;
 
 		/** X of Diamond */
-		private double mXDiamond;
-		private double[] mXDiamonds = new double[NUMBER_OF_DIAMONDS];
+		private float mXDiamond;
+		private float[] mXDiamonds = new float[NUMBER_OF_DIAMONDS];
 		private boolean[] mDiamondsViz = new boolean[NUMBER_OF_DIAMONDS];
 
 		/**Y of Diamond */
-		private double[] mYDiamonds = new double[NUMBER_OF_DIAMONDS];
-		private double[] mDiamondsSpeed = new double[NUMBER_OF_DIAMONDS];
+		private float[] mYDiamonds = new float[NUMBER_OF_DIAMONDS];
+		private float[] mDiamondsSpeed = new float[NUMBER_OF_DIAMONDS];
 
-		/** X of Blob */
-		private double mXB;
-
-		/** Y of Blob */
-		private double mYB;
-
+		/** X/Y of Blob */
+		private Vector2 mB;
+		
 		/** Rotation Angle of Blob */
-		private double mHeading=0;
+		private float mHeading=0.0f;
 
 		/** Remaining Energy */
 		private int mRemEnergy = 100;
@@ -276,10 +266,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 			mDifficulty = DIFFICULTY_EASY;
 
 			// initial show-up of lander (not yet playing)
-			mXB = 1;
-			mYB = 1;
-			mDX = 0;
-			mDY = 0;
+			mB = new Vector2(1.0f, 1.0f);
+			mD = Vector2.ZERO;
 			
 			if (actLevel == LEVEL2) 
 				myMaze = new Maze(context.getAssets(), 1);
@@ -313,24 +301,22 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 		 */
 		public void doStart() {
 			synchronized (mSurfaceHolder) {
-				mXB = mCanvasWidth / 4;
-				mYB = mCanvasHeight-mBallHeight/4;
-				mDX = 0;
-				mDY = 0;
+				mB.set(mCanvasWidth / 4.0f, mCanvasHeight-mBallHeight/4.0f);
+				mD.set(0.0f, 0.0f);
 				mRemEnergy = 100;                
-				mXDiamonds[0]= mCanvasWidth /3;
-				mYDiamonds[0] = mCanvasHeight-mBallHeight-Math.random()*40;
+				mXDiamonds[0]= mCanvasWidth /3.0f;
+				mYDiamonds[0] = mCanvasHeight-mBallHeight-(float)(Math.random()*40.0f);
 				mDiamondsViz[0] = true;
-				mDiamondsSpeed[0] = Math.random()*40;
+				mDiamondsSpeed[0] = (float)Math.random()*40.0f;
 				for (int i=1 ;i<NUMBER_OF_DIAMONDS;i++) {
-					mXDiamonds[i] = mXDiamonds[i-1] + Math.random()*200;
-					mYDiamonds[i] = mCanvasHeight-mBallHeight-Math.random()*40;
+					mXDiamonds[i] = mXDiamonds[i-1] + (float)(Math.random()*200.0f);
+					mYDiamonds[i] = mCanvasHeight-mBallHeight-(float)(Math.random()*40.0f);
 					mDiamondsViz[i] = true;
-					mDiamondsSpeed[i] = Math.random()*40+2;
+					mDiamondsSpeed[i] = (float)(Math.random()*40.0f+2.0f);
 				}
 				mXCrater[0] = mCanvasWidth / 2;
 				for (int i=1 ;i<NUMBER_OF_CRATERS;i++) {
-					mXCrater[i] = mXCrater[i-1] + Math.random()*350 + mCWidth;                	
+					mXCrater[i] = mXCrater[i-1] + (float)(Math.random()*350.0f) + mCWidth;                	
 				}
 
 				mXDiamond = mCanvasWidth/2;
@@ -360,10 +346,8 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 				setState(STATE_PAUSE);
 
 				mDifficulty = savedState.getInt(KEY_DIFFICULTY);
-				mXB = savedState.getDouble(KEY_X);
-				mYB = savedState.getDouble(KEY_Y);
-				mDX = savedState.getDouble(KEY_DX);
-				mDY = savedState.getDouble(KEY_DY);
+				mB.set(savedState.getFloat(KEY_X), savedState.getFloat(KEY_Y));
+				mD.set(savedState.getFloat(KEY_DX), savedState.getFloat(KEY_DY));
 
 				mBallWidth = savedState.getInt(KEY_BALL_WIDTH);
 				mBallHeight = savedState.getInt(KEY_BALL_HEIGHT);
@@ -404,10 +388,10 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 			synchronized (mSurfaceHolder) {
 				if (map != null) {
 					map.putInt(KEY_DIFFICULTY, Integer.valueOf(mDifficulty));
-					map.putDouble(KEY_X, Double.valueOf(mXB));
-					map.putDouble(KEY_Y, Double.valueOf(mYB));
-					map.putDouble(KEY_DX, Double.valueOf(mDX));
-					map.putDouble(KEY_DY, Double.valueOf(mDY));
+					map.putFloat(KEY_X, Float.valueOf(mB.x));
+					map.putFloat(KEY_Y, Float.valueOf(mB.y));
+					map.putFloat(KEY_DX, Float.valueOf(mD.x));
+					map.putFloat(KEY_DY, Float.valueOf(mD.y));
 					map.putInt(KEY_BALL_WIDTH, Integer.valueOf(mBallWidth));
 					map.putInt(KEY_BALL_HEIGHT, Integer.valueOf(mBallHeight));
 					map.putInt(KEY_DIAMONDS, Integer.valueOf(mDiamonds));
@@ -550,9 +534,9 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 			} else {
 				switch (action) {
 				case MotionEvent.ACTION_DOWN:
-				case MotionEvent.ACTION_UP:
 					doJump();
 					return true;
+				case MotionEvent.ACTION_UP:
 				case MotionEvent.ACTION_MOVE:
 				case MotionEvent.ACTION_CANCEL:
 				default:
@@ -566,13 +550,13 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 
 		public void doJump() {
 			// Jump only, if we are on the ground
-			if (mYB >= mCanvasHeight) {
-				mDY=INITIAL_JUMP_SPEED;
+			if (mB.y >= mCanvasHeight) {
+				mD.y=INITIAL_JUMP_SPEED;
 				mJumping = true;
 			}        	
 		}
 
-		public void doAccelerate(double mTiltAngle2) {
+		public void doAccelerate(float mTiltAngle2) {
 			mTiltAngle = -mTiltAngle2;        	
 		}
 
@@ -612,12 +596,12 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 						// left/q -> left
 					} else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT
 							|| keyCode == KeyEvent.KEYCODE_Q) {
-						doAccelerate(-5);
+						doAccelerate(-6);
 						return true;
 						// right/w -> right
 					} else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
 							|| keyCode == KeyEvent.KEYCODE_W) {
-						doAccelerate(5);
+						doAccelerate(6);
 						return true;
 						// up -> pause
 					} else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
@@ -716,10 +700,10 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 				}
 				drawEnergy(canvas);
 
-				canvas.rotate((float)mHeading, (float)(mXB), (float)(mYB-mBallHeight/4));
+				canvas.rotate(mHeading, mB.x, mB.y-mBallHeight/4.0f);
 				// Draw Blob on his location      
-				mBallImage.setBounds((int)mXB-mBallWidth/4,(int)mYB-mBallHeight/2,
-						(int)mXB+mBallWidth/4, (int)mYB);
+				mBallImage.setBounds((int)(mB.x-mBallWidth/4.0f),(int)(mB.y-mBallHeight/2.0f),
+						(int)(mB.x+mBallWidth/4.0f), (int)mB.y);
 				mBallImage.draw(canvas);
 
 				canvas.restore();   
@@ -766,11 +750,11 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 			// by 100ms or whatever.
 			if (mLastTime > now) return;
 
-			double elapsed = (now - mLastTime) / 1000.0;
+			float elapsed = (now - mLastTime) / 1000.0f;
 
 			// Base accelerations -- 0 for x, gravity for y
-			double ddx = PHYS_DOWN_ACCEL_SEC * PHYS_ACCEL_FACTOR_X * elapsed * Math.sin(Math.PI*mTiltAngle/180) * PHYS_ACCEL_FACTOR_X/2;
-			double ddy = PHYS_DOWN_ACCEL_SEC * (SensorManager.GRAVITY_MOON / 1.6) * elapsed;
+			float ddx = PHYS_DOWN_ACCEL_SEC * PHYS_ACCEL_FACTOR_X * elapsed * FloatMath.sin(PI*mTiltAngle/180.0f) * PHYS_ACCEL_FACTOR_X/2.0f;
+			float ddy = PHYS_DOWN_ACCEL_SEC * (SensorManager.GRAVITY_MOON / 1.6f) * elapsed;
 
 
 			if (mJumping) {
@@ -778,47 +762,47 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 				// cos(deg) is ddy component, sin(deg) is ddx component
 
 				// have this much acceleration from the jump
-				double accel = PHYS_FIRE_ACCEL_SEC * 1010;
+				float accel = PHYS_FIRE_ACCEL_SEC * 1010.0f;
 
-				double radians = 2 * Math.PI * 0 / 360;
+				float radians = 2.0f * PI * 0.0f / 360.0f;
 				//ddx = Math.sin(radians) * accel;
 				//ddy += Math.cos(radians) * accel;
 				mJumping = false;
 			}
 
-			double dxOld = mDX;
-			double dyOld = mDY;
+			float dxOld = mD.x;
+			float dyOld = mD.y;
 
 			// figure speeds for the end of the period
-			mDX += ddx;
-			if (mDX > PHYS_SPEED_MAX) {
-				mDX = PHYS_SPEED_MAX;
-			} else if (mDX < -PHYS_SPEED_MAX) {
-				mDX = -PHYS_SPEED_MAX;
+			mD.x += ddx;
+			if (mD.x > PHYS_SPEED_MAX) {
+				mD.x = PHYS_SPEED_MAX;
+			} else if (mD.x < -PHYS_SPEED_MAX) {
+				mD.x = -PHYS_SPEED_MAX;
 			}
 
-			mDY += ddy;
+			mD.y += ddy;
 
 			// figure position based on average speed during the period
-			mXDiamond += elapsed * (mDX + dxOld) / 2;
-			mYB += elapsed * (mDY + dyOld) / 2;
-			if (mXDiamond > 150) {
-				mXDiamond = 150;
-				mDX = 0;
+			mXDiamond += elapsed * (mD.x + dxOld) / 2.0f;
+			mB.y += elapsed * (mD.y + dyOld) / 2.0f;
+			if (mXDiamond > 150.0f) {
+				mXDiamond = 150.0f;
+				mD.x = 0.0f;
 			}
 			if (mXDiamond < -4*mCanvasWidth) {
 				mXDiamond = -4*mCanvasWidth;
-				mDX = 0;
+				mD.x = 0.0f;
 			}
-			if (mYB<0) {
-				mYB = 0;
-			} else{
-				if (mYB>=mCanvasHeight) {
-					mYB = mCanvasHeight;
+			if (mB.y<0.0f) {
+				mB.y = 0.0f;
+			} else {
+				if (mB.y>=mCanvasHeight) {
+					mB.y = mCanvasHeight;
 				}
 			}
-			mHeading = mXDiamond / 223;
-			mHeading = 360-(mHeading - Math.floor(mHeading))*360;
+			mHeading = mXDiamond / 223.0f;
+			mHeading = 360.0f-(mHeading - FloatMath.floor(mHeading))*360.0f;
 			mLastTime = now;
 
 			// Move Diamonds
@@ -850,10 +834,10 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 
 				// touch Crater
 				for (int i=0;i<NUMBER_OF_CRATERS;i++) {
-					if (mScratchRect.contains((float)(mXCrater[i]+mXDiamond-mCWidth/3), (float)mCanvasHeight-10)
-							|| mScratchRect.contains((float)(mXCrater[i]+mXDiamond+mCWidth/3), (float)mCanvasHeight-10)) {
-						mDX*=0.5;
-						mDY=-150;
+					if (mScratchRect.contains((float)(mXCrater[i]+mXDiamond-mCWidth/3.0f), (float)mCanvasHeight-10.0f)
+							|| mScratchRect.contains((float)(mXCrater[i]+mXDiamond+mCWidth/3.0f), (float)mCanvasHeight-10.0f)) {
+						mD.x*=0.5f;
+						mD.y=-150.0f;
 					}
 
 					// zaehlt nur runter, wenn man in der Mitte des Kraters ist.
@@ -880,7 +864,7 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 		public void onSensorChanged(int sensor, float[] values) {
 			synchronized (this) {
 				Log.d("LOG", "onSensorChanged: " + sensor + ", x: " + values[0] + ", y: " + values[1] + ", z: " + values[2]);
-				if (sensor != SensorManager.SENSOR_ACCELEROMETER || values.length < 3)
+				if (sensor != SensorManager.SENSOR_ACCELEROMETER || values.length < 3.0f)
 					return;                    
 
 				float x, y, z;
@@ -893,13 +877,13 @@ class llextView extends SurfaceView implements SurfaceHolder.Callback {
 					y = values[1];
 					z = values[2];
 				}
-				float m = (float) Math.sqrt(x*x + y*y + z*z);
-				float tilt = m == 0 ? 0  : (float) Math.toDegrees(Math.asin(x / m));
+				float m = FloatMath.sqrt(x*x + y*y + z*z);
+				float tilt = m == 0.0f ? 0.0f  : (float) Math.toDegrees(Math.asin(x / m));
 				Log.v("LOG", "tilt: " + x + "," + y + "," + z + " -> " + tilt);
 
 				// Amplify the user's movements.
-				tilt *= 1;        
-				float mTiltAngle = tilt < 0 ? tilt + 360 : tilt;           	
+				tilt *= 1.0f;        
+				float mTiltAngle = tilt < 0.0f ? tilt + 360.0f : tilt;           	
 				doAccelerate(mTiltAngle);          
 			}
 		}

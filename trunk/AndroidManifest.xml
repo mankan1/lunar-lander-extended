@@ -31,5 +31,4 @@
     <activity android:label="Preferences" android:name="Preferences"></activity>
 </application>
 <uses-permission android:name="android.permission.VIBRATE"></uses-permission>
-<uses-sdk android:minSdkVersion="4"></uses-sdk>
 </manifest>

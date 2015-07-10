@@ -1,0 +1,1 @@
+The project´s goal is to enhance the lunar lander sample app from the android sdk.
